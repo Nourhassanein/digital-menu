@@ -1,5 +1,8 @@
 function Cart({ cartItems, increaseQty, decreaseQty, openCheckout }) {
-  const total = cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
+  const total = cartItems.reduce(
+    (sum, item) => sum + item.price * item.quantity,
+    0
+  );
 
   return (
     <div className="cart-card shadow-sm">
@@ -35,11 +38,17 @@ function Cart({ cartItems, increaseQty, decreaseQty, openCheckout }) {
                 </div>
 
                 <div className="qty-controls">
-                  <button className="qty-btn" onClick={() => decreaseQty(item.id)}>
+                  <button
+                    className="qty-btn"
+                    onClick={() => decreaseQty(item.id)}
+                  >
                     -
                   </button>
                   <span>{item.quantity}</span>
-                  <button className="qty-btn" onClick={() => increaseQty(item.id)}>
+                  <button
+                    className="qty-btn"
+                    onClick={() => increaseQty(item.id)}
+                  >
                     +
                   </button>
                 </div>
@@ -53,7 +62,8 @@ function Cart({ cartItems, increaseQty, decreaseQty, openCheckout }) {
           </div>
 
           <button className="btn kitchen-btn w-100" onClick={openCheckout}>
-            <i className="bi bi-credit-card-2-front me-2"></i>Proceed to Checkout
+            <i className="bi bi-credit-card-2-front me-2"></i>
+            Proceed to Checkout
           </button>
         </>
       )}
