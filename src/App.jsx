@@ -45,6 +45,14 @@ function App() {
     localStorage.setItem('bloomTheme', JSON.stringify(darkMode));
   }, [darkMode]);
 
+  useEffect(() => {
+    if (darkMode) {
+      document.body.classList.add('dark-mode-body');
+    } else {
+      document.body.classList.remove('dark-mode-body');
+    }
+  }, [darkMode]);
+
   const categories = ['All', ...new Set(menuData.map(item => item.category))];
 
   const filteredItems = menuData.filter(item => {
