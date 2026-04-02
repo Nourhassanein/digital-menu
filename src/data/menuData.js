@@ -174,16 +174,16 @@ const menuData = [
     tag: "Dessert"
   },
   {
-    id: 16,
-    name: "Midnight Galaxy Sphere",
-    category: "Desserts",
-    image: `${BASE}images/midnight-galaxy-sphere.jpg`,
-    description: "Dark chocolate sphere filled with blackberry mousse and a soft surprise center.",
-    price: 5.75,
-    rating: 4.9,
-    badge: "Signature",
-    tag: "Dessert"
-  },
+  id: 16,
+  name: "Cotton Cloud Delight",
+  category: "Desserts",
+  image: `${BASE}images/cotton-cloud-delight.jpg`,
+  description: "A dreamy scoop of vanilla bean ice cream surrounded by airy cotton candy, finished with raspberry sauce and delicate edible shimmer.",
+  price: 6.25,
+  rating: 4.9,
+  badge: "Signature",
+  tag: "Luxury"
+},
   {
     id: 17,
     name: "Velvet Truffle Nest",
