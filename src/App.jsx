@@ -14,53 +14,124 @@ import CheckoutModal from './components/CheckoutModal';
 function App() {
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [searchTerm, setSearchTerm] = useState('');
-  const [cartItems, setCartItems] = useState([]); // ❌ no persistence
+
+  // START CART EMPTY EVERY REFRESH
+  const [cartItems, setCartItems] = useState([]);
+  // END CART EMPTY EVERY REFRESH
+
   const [darkMode, setDarkMode] = useState(() => {
     const savedTheme = localStorage.getItem('bloomTheme');
     return savedTheme ? JSON.parse(savedTheme) : false;
   });
+
   const [selectedItem, setSelectedItem] = useState(null);
   const [toastMessage, setToastMessage] = useState('');
   const [orderSuccess, setOrderSuccess] = useState(false);
   const [showCheckout, setShowCheckout] = useState(false);
+
   const [checkoutData, setCheckoutData] = useState({
-    name: '', diningType: 'Dine In', tableNumber: '', paymentMethod: 'Cash', notes: ''
+    name: '',
+    diningType: 'Dine In',
+    tableNumber: '',
+    paymentMethod: 'Cash',
+    notes: '',
   });
 
-  useEffect(() => { localStorage.setItem('bloomTheme', JSON.stringify(darkMode)); }, [darkMode]);
-  useEffect(() => { document.body.classList.toggle('dark-mode-body', darkMode); }, [darkMode]);
+  // Remove cart localStorage
+  // useEffect(() => {
+  //   localStorage.setItem('bloomCart', JSON.stringify(cartItems));
+  // }, [cartItems]);
+
+  useEffect(() => {
+    localStorage.setItem('bloomTheme', JSON.stringify(darkMode));
+  }, [darkMode]);
+
+  useEffect(() => {
+    if (darkMode) {
+      document.body.classList.add('dark-mode-body');
+    } else {
+      document.body.classList.remove('dark-mode-body');
+    }
+  }, [darkMode]);
 
   const categories = ['All', ...new Set(menuData.map(item => item.category))];
 
   const filteredItems = menuData.filter(item => {
-    const matchesCategory = selectedCategory === 'All' || item.category === selectedCategory;
-    const matchesSearch = item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    const matchesCategory =
+      selectedCategory === 'All' || item.category === selectedCategory;
+
+    const matchesSearch =
+      item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       item.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
       item.tag.toLowerCase().includes(searchTerm.toLowerCase());
+
     return matchesCategory && matchesSearch;
   });
 
-  const addToCart = item => {
-    const existing = cartItems.find(ci => ci.id === item.id);
-    if (existing) setCartItems(cartItems.map(ci => ci.id === item.id ? { ...ci, quantity: ci.quantity + 1 } : ci));
-    else setCartItems([...cartItems, { ...item, quantity: 1 }]);
+  const addToCart = (item) => {
+    const existingItem = cartItems.find(cartItem => cartItem.id === item.id);
+
+    if (existingItem) {
+      const updatedCart = cartItems.map(cartItem =>
+        cartItem.id === item.id
+          ? { ...cartItem, quantity: cartItem.quantity + 1 }
+          : cartItem
+      );
+      setCartItems(updatedCart);
+    } else {
+      setCartItems([...cartItems, { ...item, quantity: 1 }]);
+    }
+
     setToastMessage(`${item.name} added to your order ✨`);
     setTimeout(() => setToastMessage(''), 2500);
   };
 
-  const increaseQty = id => setCartItems(cartItems.map(item => item.id === id ? { ...item, quantity: item.quantity + 1 } : item));
-  const decreaseQty = id => setCartItems(cartItems.map(item => item.id === id ? { ...item, quantity: item.quantity - 1 } : item).filter(i => i.quantity > 0));
+  const increaseQty = (id) => {
+    const updatedCart = cartItems.map(item =>
+      item.id === id ? { ...item, quantity: item.quantity + 1 } : item
+    );
+    setCartItems(updatedCart);
+  };
 
-  const openCheckout = () => { if (cartItems.length) setShowCheckout(true); };
+  const decreaseQty = (id) => {
+    const updatedCart = cartItems
+      .map(item =>
+        item.id === id ? { ...item, quantity: item.quantity - 1 } : item
+      )
+      .filter(item => item.quantity > 0);
+
+    setCartItems(updatedCart);
+  };
+
+  const openCheckout = () => {
+    if (cartItems.length === 0) return;
+    setShowCheckout(true);
+  };
+
   const confirmOrder = () => {
-    if (!checkoutData.name.trim()) { setToastMessage('Please enter your name ✍️'); return; }
-    if (checkoutData.diningType === 'Dine In' && !checkoutData.tableNumber.trim()) { setToastMessage('Please enter your table number 🍽️'); return; }
+    if (!checkoutData.name.trim()) {
+      setToastMessage('Please enter your name first ✍️');
+      setTimeout(() => setToastMessage(''), 2500);
+      return;
+    }
+
+    if (
+      checkoutData.diningType === 'Dine In' &&
+      !checkoutData.tableNumber.trim()
+    ) {
+      setToastMessage('Please enter your table number 🍽️');
+      setTimeout(() => setToastMessage(''), 2500);
+      return;
+    }
 
     const kitchenOrder = {
       orderId: Date.now(),
       customer: checkoutData.name,
       diningType: checkoutData.diningType,
-      tableNumber: checkoutData.diningType === 'Dine In' ? checkoutData.tableNumber : 'Pickup',
+      tableNumber:
+        checkoutData.diningType === 'Dine In'
+          ? checkoutData.tableNumber
+          : 'Pickup',
       paymentMethod: checkoutData.paymentMethod,
       notes: checkoutData.notes,
       items: cartItems,
@@ -69,13 +140,26 @@ function App() {
       status: 'Sent to Kitchen',
     };
 
-    const previousOrders = JSON.parse(localStorage.getItem('bloomOrderHistory')) || [];
-    localStorage.setItem('bloomOrderHistory', JSON.stringify([kitchenOrder, ...previousOrders]));
+    localStorage.setItem('lastKitchenOrder', JSON.stringify(kitchenOrder));
 
-    setCartItems([]); // ✅ CLEAR cart
+    const previousOrders =
+      JSON.parse(localStorage.getItem('bloomOrderHistory')) || [];
+    localStorage.setItem(
+      'bloomOrderHistory',
+      JSON.stringify([kitchenOrder, ...previousOrders])
+    );
+
+    setCartItems([]); // clear cart after order
     setShowCheckout(false);
     setOrderSuccess(true);
-    setCheckoutData({ name: '', diningType: 'Dine In', tableNumber: '', paymentMethod: 'Cash', notes: '' });
+
+    setCheckoutData({
+      name: '',
+      diningType: 'Dine In',
+      tableNumber: '',
+      paymentMethod: 'Cash',
+      notes: '',
+    });
 
     setTimeout(() => setOrderSuccess(false), 4000);
   };
@@ -83,26 +167,60 @@ function App() {
   const totalCartCount = cartItems.reduce((sum, item) => sum + item.quantity, 0);
 
   return (
-    <div className={`app-wrapper ${darkMode ? 'dark-mode' : ''}`}>
+    <div className={darkMode ? 'dark-mode' : ''}>
       <NavbarMenu cartCount={totalCartCount} />
+
       <div className="container py-4">
         <ThemeToggle darkMode={darkMode} setDarkMode={setDarkMode} />
         <HeroSection />
         <SearchBar searchTerm={searchTerm} setSearchTerm={setSearchTerm} />
-        <CategoryFilter categories={categories} selectedCategory={selectedCategory} onSelectCategory={setSelectedCategory} />
+
+        <CategoryFilter
+          categories={categories}
+          selectedCategory={selectedCategory}
+          onSelectCategory={setSelectedCategory}
+        />
+
         <div className="row g-4">
           <div className="col-lg-8">
-            <MenuList items={filteredItems} addToCart={addToCart} openModal={setSelectedItem} />
+            <MenuList
+              items={filteredItems}
+              addToCart={addToCart}
+              openModal={setSelectedItem}
+            />
           </div>
+
           <div className="col-lg-4">
-            <Cart cartItems={cartItems} increaseQty={increaseQty} decreaseQty={decreaseQty} openCheckout={openCheckout} />
+            <Cart
+              cartItems={cartItems}
+              increaseQty={increaseQty}
+              decreaseQty={decreaseQty}
+              openCheckout={openCheckout}
+            />
           </div>
         </div>
       </div>
 
-      {selectedItem && <ItemModal item={selectedItem} closeModal={() => setSelectedItem(null)} addToCart={addToCart} />}
-      {showCheckout && <CheckoutModal closeModal={() => setShowCheckout(false)} checkoutData={checkoutData} setCheckoutData={setCheckoutData} confirmOrder={confirmOrder} cartItems={cartItems} />}
+      {selectedItem && (
+        <ItemModal
+          item={selectedItem}
+          closeModal={() => setSelectedItem(null)}
+          addToCart={addToCart}
+        />
+      )}
+
+      {showCheckout && (
+        <CheckoutModal
+          closeModal={() => setShowCheckout(false)}
+          checkoutData={checkoutData}
+          setCheckoutData={setCheckoutData}
+          confirmOrder={confirmOrder}
+          cartItems={cartItems}
+        />
+      )}
+
       {toastMessage && <ToastAlert message={toastMessage} />}
+
       {orderSuccess && (
         <div className="kitchen-success">
           <div className="kitchen-box">

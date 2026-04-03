@@ -1,3 +1,4 @@
+
 function ToastAlert({ message }) {
   return (
     <div className="toast-alert">

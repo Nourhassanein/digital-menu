@@ -2,7 +2,7 @@
   "name": "digital-menu",
   "private": true,
   "version": "0.0.0",
-  "homepage": "https://nourhassein.github.io/digital-menu/",
+  "homepage": "https://nourhassanein.github.io/digital-menu/",
   "type": "module",
   "scripts": {
     "dev": "vite",

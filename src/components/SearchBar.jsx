@@ -1,7 +1,7 @@
 function SearchBar({ searchTerm, setSearchTerm }) {
   return (
-    <div className="row justify-content-center justify-content-lg-end mb-4">
-      <div className="col-md-8 col-lg-6">
+    <div className="row justify-content-center mb-4">
+      <div className="col-md-8">
         <div className="search-wrapper">
           <i className="bi bi-search search-icon"></i>
           <input
