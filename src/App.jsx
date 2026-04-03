@@ -37,17 +37,14 @@ function App() {
     notes: '',
   });
 
-  // Save cart
   useEffect(() => {
     localStorage.setItem('bloomCart', JSON.stringify(cartItems));
   }, [cartItems]);
 
-  // Save theme
   useEffect(() => {
     localStorage.setItem('bloomTheme', JSON.stringify(darkMode));
   }, [darkMode]);
 
-  // Dark mode body class
   useEffect(() => {
     if (darkMode) {
       document.body.classList.add('dark-mode-body');
@@ -56,22 +53,9 @@ function App() {
     }
   }, [darkMode]);
 
-  // LOCK BODY SCROLL WHEN MODAL IS OPEN
-  useEffect(() => {
-    if (selectedItem || showCheckout || orderSuccess) {
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = 'auto';
-    }
+  const categories = ['All', ...new Set(menuData.map(item => item.category))];
 
-    return () => {
-      document.body.style.overflow = 'auto';
-    };
-  }, [selectedItem, showCheckout, orderSuccess]);
-
-  const categories = ['All', ...new Set(menuData.map((item) => item.category))];
-
-  const filteredItems = menuData.filter((item) => {
+  const filteredItems = menuData.filter(item => {
     const matchesCategory =
       selectedCategory === 'All' || item.category === selectedCategory;
 
@@ -84,10 +68,10 @@ function App() {
   });
 
   const addToCart = (item) => {
-    const existingItem = cartItems.find((cartItem) => cartItem.id === item.id);
+    const existingItem = cartItems.find(cartItem => cartItem.id === item.id);
 
     if (existingItem) {
-      const updatedCart = cartItems.map((cartItem) =>
+      const updatedCart = cartItems.map(cartItem =>
         cartItem.id === item.id
           ? { ...cartItem, quantity: cartItem.quantity + 1 }
           : cartItem
@@ -102,7 +86,7 @@ function App() {
   };
 
   const increaseQty = (id) => {
-    const updatedCart = cartItems.map((item) =>
+    const updatedCart = cartItems.map(item =>
       item.id === id ? { ...item, quantity: item.quantity + 1 } : item
     );
     setCartItems(updatedCart);
@@ -110,10 +94,10 @@ function App() {
 
   const decreaseQty = (id) => {
     const updatedCart = cartItems
-      .map((item) =>
+      .map(item =>
         item.id === id ? { ...item, quantity: item.quantity - 1 } : item
       )
-      .filter((item) => item.quantity > 0);
+      .filter(item => item.quantity > 0);
 
     setCartItems(updatedCart);
   };
@@ -150,10 +134,7 @@ function App() {
       paymentMethod: checkoutData.paymentMethod,
       notes: checkoutData.notes,
       items: cartItems,
-      total: cartItems.reduce(
-        (sum, item) => sum + item.price * item.quantity,
-        0
-      ),
+      total: cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0),
       time: new Date().toLocaleString(),
       status: 'Sent to Kitchen',
     };
@@ -162,7 +143,6 @@ function App() {
 
     const previousOrders =
       JSON.parse(localStorage.getItem('bloomOrderHistory')) || [];
-
     localStorage.setItem(
       'bloomOrderHistory',
       JSON.stringify([kitchenOrder, ...previousOrders])
@@ -183,13 +163,10 @@ function App() {
     setTimeout(() => setOrderSuccess(false), 4000);
   };
 
-  const totalCartCount = cartItems.reduce(
-    (sum, item) => sum + item.quantity,
-    0
-  );
+  const totalCartCount = cartItems.reduce((sum, item) => sum + item.quantity, 0);
 
   return (
-    <div className={darkMode ? 'dark-mode app-wrapper' : 'app-wrapper'}>
+    <div className={darkMode ? 'dark-mode' : ''}>
       <NavbarMenu cartCount={totalCartCount} />
 
       <div className="container py-4">
