@@ -7,7 +7,7 @@ export const fetchMenuData = async () => {
 
     return data.map(item => ({
       ...item,
-      price: Number(item.price), // ✅ FIX ERROR toFixed
+      price: Number(item.price),
       rating: Number(item.rating),
       image: item.image
         ? `http://localhost:5000/uploads/${item.image}`

@@ -1,14 +1,11 @@
 import db from "../config/db.js";
 
-// GET ALL ITEMS
 export const getItems = (req, res) => {
   db.query("SELECT * FROM menu_items", (err, results) => {
     if (err) return res.status(500).json({ error: err });
     res.json(results);
   });
 };
-
-// FILTER BY CATEGORY
 export const getItemsByCategory = (req, res) => {
   const { category } = req.query;
 
@@ -21,8 +18,6 @@ export const getItemsByCategory = (req, res) => {
     res.json(results);
   });
 };
-
-// SEARCH
 export const searchItems = (req, res) => {
   const { q } = req.query;
 
@@ -36,7 +31,6 @@ export const searchItems = (req, res) => {
   );
 };
 
-// CREATE ITEM
 export const createItem = (req, res) => {
   const { name, description, price, category, rating, badge, tag } = req.body;
   const image = req.file ? req.file.filename : null;
@@ -57,7 +51,6 @@ export const createItem = (req, res) => {
   );
 };
 
-// UPDATE ITEM
 export const updateItem = (req, res) => {
   const { id } = req.params;
   const { name, description, price, category, rating, badge, tag } = req.body;
@@ -80,7 +73,6 @@ export const updateItem = (req, res) => {
   );
 };
 
-// DELETE ITEM
 export const deleteItem = (req, res) => {
   db.query("DELETE FROM menu_items WHERE id=?", [req.params.id], (err) => {
     if (err) return res.status(500).json({ error: err });

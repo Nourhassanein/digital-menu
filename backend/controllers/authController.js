@@ -1,40 +1,49 @@
-import db from "../config/db.js";
+import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
-import bcrypt from "bcryptjs";
+import db from "../config/db.js";
 
 export const login = (req, res) => {
-  const { username, password } = req.body;
+  const { email, password } = req.body;
 
-  if (!username || !password) {
-    return res.status(400).json({ message: "Missing credentials" });
+  if (!email || !password) {
+    return res.status(400).json({ message: "Email and password required" });
   }
 
   db.query(
-    "SELECT * FROM admins WHERE username=?",
-    [username],
-    async (err, result) => {
+    "SELECT * FROM admins WHERE email = ?",
+    [email],
+    async (err, results) => {
       if (err) {
-        console.error(err);
         return res.status(500).json({ message: "Database error" });
       }
 
-      if (result.length === 0) {
-        return res.status(404).json({ message: "User not found" });
+      if (results.length === 0) {
+        return res.status(401).json({ message: "Invalid email" });
       }
 
-      const valid = await bcrypt.compare(password, result[0].password);
+      const admin = results[0];
 
-      if (!valid) {
-        return res.status(401).json({ message: "Wrong password" });
+      // check password
+      const isValid = password === admin.password;;
+
+      if (!isValid) {
+        return res.status(401).json({ message: "Invalid password" });
       }
 
+      // create JWT token
       const token = jwt.sign(
-        { id: result[0].id },
-        process.env.JWT_SECRET,
+        {
+          id: admin.id,
+          email: admin.email
+        },
+        process.env.JWT_SECRET || "secret",
         { expiresIn: "1d" }
       );
 
-      res.json({ token });
+      res.json({
+        message: "Login successful",
+        token
+      });
     }
   );
 };

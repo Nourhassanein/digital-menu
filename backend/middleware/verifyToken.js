@@ -6,8 +6,6 @@ export const verifyToken = (req, res, next) => {
   if (!authHeader) {
     return res.status(403).json({ message: "No token provided" });
   }
-
-  // format: Bearer TOKEN
   const token = authHeader.split(" ")[1];
 
   if (!token) {

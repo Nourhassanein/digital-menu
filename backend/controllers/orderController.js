@@ -1,6 +1,4 @@
 import db from "../config/db.js";
-
-// CREATE ORDER
 export const createOrder = (req, res) => {
   const { customer, total } = req.body;
 
@@ -23,8 +21,6 @@ export const createOrder = (req, res) => {
     });
   });
 };
-
-// GET ORDERS
 export const getOrders = (req, res) => {
   db.query("SELECT * FROM orders ORDER BY id DESC", (err, results) => {
     if (err) {
@@ -35,8 +31,6 @@ export const getOrders = (req, res) => {
     res.json(results);
   });
 };
-
-// UPDATE ORDER STATUS
 export const updateOrderStatus = (req, res) => {
   const { id } = req.params;
   const status = req.body?.status;

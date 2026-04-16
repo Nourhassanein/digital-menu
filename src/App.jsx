@@ -36,7 +36,6 @@ function App() {
     notes: '',
   });
 
-  // ✅ FETCH MENU FROM BACKEND
   useEffect(() => {
     const loadData = async () => {
       const data = await fetchMenuData();
@@ -45,17 +44,16 @@ function App() {
     loadData();
   }, []);
 
-  // ✅ SAVE DARK MODE
   useEffect(() => {
     localStorage.setItem('bloomTheme', JSON.stringify(darkMode));
   }, [darkMode]);
 
-  // ✅ APPLY DARK MODE
+  
   useEffect(() => {
     document.body.classList.toggle('dark-mode-body', darkMode);
   }, [darkMode]);
 
-  // ✅ LOCK SCROLL WHEN MODAL OPEN
+  
   useEffect(() => {
     document.body.style.overflow =
       selectedItem || showCheckout ? 'hidden' : 'auto';
@@ -65,10 +63,10 @@ function App() {
     };
   }, [selectedItem, showCheckout]);
 
-  // ✅ DYNAMIC CATEGORIES
+  
   const categories = ['All', ...new Set(items.map(item => item.category))];
 
-  // ✅ FILTER
+  
   const filteredItems = items.filter(item => {
     const matchesCategory =
       selectedCategory === 'All' || item.category === selectedCategory;
@@ -80,7 +78,6 @@ function App() {
     return matchesCategory && matchesSearch;
   });
 
-  // ✅ CART
   const addToCart = (item) => {
     const exist = cartItems.find(i => i.id === item.id);
 
@@ -117,7 +114,6 @@ function App() {
     setShowCheckout(true);
   };
 
-  // ✅ FINAL ORDER (CONNECTED TO BACKEND)
   const confirmOrder = async () => {
     if (!checkoutData.name.trim()) {
       setToastMessage('Enter your name ✍️');
