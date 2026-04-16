@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react';
-import menuData from './data/menuData';
 import NavbarMenu from './components/NavbarMenu';
 import HeroSection from './components/HeroSection';
 import CategoryFilter from './components/CategoryFilter';
@@ -10,13 +9,14 @@ import ThemeToggle from './components/ThemeToggle';
 import ItemModal from './components/ItemModal';
 import ToastAlert from './components/ToastAlert';
 import CheckoutModal from './components/CheckoutModal';
+import { fetchMenuData } from './data/menuData';
 
 function App() {
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [searchTerm, setSearchTerm] = useState('');
 
+  const [items, setItems] = useState([]);
   const [cartItems, setCartItems] = useState([]);
-  
 
   const [darkMode, setDarkMode] = useState(() => {
     const savedTheme = localStorage.getItem('bloomTheme');
@@ -35,76 +35,81 @@ function App() {
     paymentMethod: 'Cash',
     notes: '',
   });
+
+  // ✅ FETCH MENU FROM BACKEND
+  useEffect(() => {
+    const loadData = async () => {
+      const data = await fetchMenuData();
+      setItems(data);
+    };
+    loadData();
+  }, []);
+
+  // ✅ SAVE DARK MODE
   useEffect(() => {
     localStorage.setItem('bloomTheme', JSON.stringify(darkMode));
   }, [darkMode]);
 
+  // ✅ APPLY DARK MODE
   useEffect(() => {
-    if (darkMode) {
-      document.body.classList.add('dark-mode-body');
-    } else {
-      document.body.classList.remove('dark-mode-body');
-    }
+    document.body.classList.toggle('dark-mode-body', darkMode);
   }, [darkMode]);
+
+  // ✅ LOCK SCROLL WHEN MODAL OPEN
   useEffect(() => {
-  if (selectedItem || showCheckout) {
-    document.body.style.overflow = 'hidden';
-  } else {
-    document.body.style.overflow = 'auto';
-  }
+    document.body.style.overflow =
+      selectedItem || showCheckout ? 'hidden' : 'auto';
 
-  return () => {
-    document.body.style.overflow = 'auto';
-  };
-}, [selectedItem, showCheckout]);
+    return () => {
+      document.body.style.overflow = 'auto';
+    };
+  }, [selectedItem, showCheckout]);
 
-  const categories = ['All', ...new Set(menuData.map(item => item.category))];
+  // ✅ DYNAMIC CATEGORIES
+  const categories = ['All', ...new Set(items.map(item => item.category))];
 
-  const filteredItems = menuData.filter(item => {
+  // ✅ FILTER
+  const filteredItems = items.filter(item => {
     const matchesCategory =
       selectedCategory === 'All' || item.category === selectedCategory;
 
     const matchesSearch =
       item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      item.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      item.tag.toLowerCase().includes(searchTerm.toLowerCase());
+      item.description.toLowerCase().includes(searchTerm.toLowerCase());
 
     return matchesCategory && matchesSearch;
   });
 
+  // ✅ CART
   const addToCart = (item) => {
-    const existingItem = cartItems.find(cartItem => cartItem.id === item.id);
+    const exist = cartItems.find(i => i.id === item.id);
 
-    if (existingItem) {
-      const updatedCart = cartItems.map(cartItem =>
-        cartItem.id === item.id
-          ? { ...cartItem, quantity: cartItem.quantity + 1 }
-          : cartItem
-      );
-      setCartItems(updatedCart);
+    if (exist) {
+      setCartItems(cartItems.map(i =>
+        i.id === item.id ? { ...i, quantity: i.quantity + 1 } : i
+      ));
     } else {
       setCartItems([...cartItems, { ...item, quantity: 1 }]);
     }
 
-    setToastMessage(`${item.name} added to your order ✨`);
-    setTimeout(() => setToastMessage(''), 2500);
+    setToastMessage(`${item.name} added ✨`);
+    setTimeout(() => setToastMessage(''), 2000);
   };
 
   const increaseQty = (id) => {
-    const updatedCart = cartItems.map(item =>
+    setCartItems(cartItems.map(item =>
       item.id === id ? { ...item, quantity: item.quantity + 1 } : item
-    );
-    setCartItems(updatedCart);
+    ));
   };
 
   const decreaseQty = (id) => {
-    const updatedCart = cartItems
-      .map(item =>
-        item.id === id ? { ...item, quantity: item.quantity - 1 } : item
-      )
-      .filter(item => item.quantity > 0);
-
-    setCartItems(updatedCart);
+    setCartItems(
+      cartItems
+        .map(item =>
+          item.id === id ? { ...item, quantity: item.quantity - 1 } : item
+        )
+        .filter(item => item.quantity > 0)
+    );
   };
 
   const openCheckout = () => {
@@ -112,10 +117,11 @@ function App() {
     setShowCheckout(true);
   };
 
-  const confirmOrder = () => {
+  // ✅ FINAL ORDER (CONNECTED TO BACKEND)
+  const confirmOrder = async () => {
     if (!checkoutData.name.trim()) {
-      setToastMessage('Please enter your name first ✍️');
-      setTimeout(() => setToastMessage(''), 2500);
+      setToastMessage('Enter your name ✍️');
+      setTimeout(() => setToastMessage(''), 2000);
       return;
     }
 
@@ -123,13 +129,12 @@ function App() {
       checkoutData.diningType === 'Dine In' &&
       !checkoutData.tableNumber.trim()
     ) {
-      setToastMessage('Please enter your table number 🍽️');
-      setTimeout(() => setToastMessage(''), 2500);
+      setToastMessage('Enter table number 🍽️');
+      setTimeout(() => setToastMessage(''), 2000);
       return;
     }
 
-    const kitchenOrder = {
-      orderId: Date.now(),
+    const orderData = {
       customer: checkoutData.name,
       diningType: checkoutData.diningType,
       tableNumber:
@@ -139,36 +144,48 @@ function App() {
       paymentMethod: checkoutData.paymentMethod,
       notes: checkoutData.notes,
       items: cartItems,
-      total: cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0),
-      time: new Date().toLocaleString(),
-      status: 'Sent to Kitchen',
+      total: cartItems.reduce(
+        (sum, item) => sum + item.price * item.quantity,
+        0
+      )
     };
 
-    localStorage.setItem('lastKitchenOrder', JSON.stringify(kitchenOrder));
+    try {
+      const res = await fetch("http://localhost:5000/api/orders", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(orderData)
+      });
 
-    const previousOrders =
-      JSON.parse(localStorage.getItem('bloomOrderHistory')) || [];
-    localStorage.setItem(
-      'bloomOrderHistory',
-      JSON.stringify([kitchenOrder, ...previousOrders])
-    );
+      if (!res.ok) throw new Error("Failed");
 
-    setCartItems([]); // clear cart after order
-    setShowCheckout(false);
-    setOrderSuccess(true);
+      // ✅ SUCCESS
+      setCartItems([]);
+      setShowCheckout(false);
+      setOrderSuccess(true);
 
-    setCheckoutData({
-      name: '',
-      diningType: 'Dine In',
-      tableNumber: '',
-      paymentMethod: 'Cash',
-      notes: '',
-    });
+      setCheckoutData({
+        name: '',
+        diningType: 'Dine In',
+        tableNumber: '',
+        paymentMethod: 'Cash',
+        notes: '',
+      });
 
-    setTimeout(() => setOrderSuccess(false), 4000);
+      setTimeout(() => setOrderSuccess(false), 4000);
+
+    } catch (error) {
+      console.error(error);
+      setToastMessage("Server error ❌");
+    }
   };
 
-  const totalCartCount = cartItems.reduce((sum, item) => sum + item.quantity, 0);
+  const totalCartCount = cartItems.reduce(
+    (sum, item) => sum + item.quantity,
+    0
+  );
 
   return (
     <div className={darkMode ? 'dark-mode' : ''}>
@@ -231,7 +248,7 @@ function App() {
             <i className="bi bi-check-circle-fill success-icon"></i>
             <h4>Order Sent to Kitchen</h4>
             <p>Your order has been received successfully.</p>
-            <small>Estimated preparation time: 15–20 mins 🍽️</small>
+            <small>15–20 mins 🍽️</small>
           </div>
         </div>
       )}
